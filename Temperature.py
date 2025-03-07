@@ -29,7 +29,7 @@ def update(frame):
     ax.set_title(f"Temperature at time {str(time_steps[frame].values)[:16]}")
 
 
-ani = animation.FuncAnimation(fig, update, frames=len(time_steps), interval=200)
+ani = animation.FuncAnimation(fig, update, frames=len(time_steps), interval=50)
 
 
 ani.save('temperature_animation.mp4', writer='ffmpeg')  
