@@ -15,35 +15,61 @@ dates = num2date(time[:], units=time_units, calendar=time_calendar)
 
 x, y = np.meshgrid(lat, np.log10(pres)) 
 
-# Adjust figure size and add padding
+# Create figure and initial plot
 fig, ax = plt.subplots(figsize=(12, 9))
 plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9)
 
-data_to_plot = np.flipud(np.squeeze(ta[0,:,:]))
-cax = ax.imshow(data_to_plot, extent=[x.min(), x.max(), y.min(), y.max()],
-                aspect='auto', cmap='jet', origin='upper',
-                interpolation='bilinear')
-cbar = fig.colorbar(cax, ax=ax, location='right', label='Temperature')
+# Set up the axis labels and ticks
+ax.set_xticks([-90, -60, -30, 0, 30, 60, 90])
+ax.set_xticklabels(['90°S', '60°S', '30°S', '0°', '30°N', '60°N', '90°N'])
+ax.set_xlabel("Latitude (°N/°S)")
+ax.set_ylabel("Pressure (Log₁₀Pa)")
 
-def update(frame):
+# Initialize list to store frames
+frames = []
+
+# Create frames using a for loop
+for frame in range(len(time)):
     data_to_plot = np.flipud(np.squeeze(ta[frame,:,:]))
-    cax.set_data(data_to_plot)
+    
+    # Clear previous plot
+    ax.clear()
+    
+    # Recreate the plot for each frame
+    cax = ax.imshow(data_to_plot, 
+                    extent=[lat.min(), lat.max(), np.log10(pres).min(), np.log10(pres).max()],
+                    aspect='auto', 
+                    cmap='jet', 
+                    origin='upper',
+                    interpolation='bilinear')
+    
+    # Reset the ticks and labels for each frame
+    ax.set_xticks([-90, -60, -30, 0, 30, 60, 90])
+    ax.set_xticklabels(['90°S', '60°S', '30°S', '0°', '30°N', '60°N', '90°N'])
+    ax.set_xlabel("Latitude (°N/°S)")
+    ax.set_ylabel("Pressure (Log₁₀Pa)")
     ax.set_title(f"Temperature for {dates[frame].strftime('%Y-%m-%d')}")
-    return cax, ax.title
+    
+    # Add colorbar (only for the first frame)
+    if frame == 0:
+        cbar = fig.colorbar(cax, ax=ax, location='right', label='Temperature (K)')
+    
+    # Save the frame
+    plt.savefig(f'frame_{frame:04d}.png')
+    frames.append(f'frame_{frame:04d}.png')
 
+# Use ffmpeg to combine frames into video
+import os
+os.system('ffmpeg -framerate 10 -i frame_%04d.png -c:v libx264 -pix_fmt yuv420p temperature_animation.mp4')
 
-ani = animation.FuncAnimation(fig, update, frames=len(time), interval=50, blit=False)
+# Clean up frame files
+for frame in frames:
+    os.remove(frame)
 
-# Move tight_layout() after all plot elements are added
-plt.title("Temperature (K)")
-plt.xlabel("Latitude (°N)")
-plt.ylabel("Pressure (hPa)")
-plt.tight_layout()
-
-# Save with higher resolution and bitrate
-ani.save('temperature_animation_logarithmic_faster.mp4', 
-         writer='ffmpeg',
-         #dpi=100,  # Reduced DPI for reasonable file size
-         #fps=10
-         )
 plt.show()
+
+
+
+
+
+

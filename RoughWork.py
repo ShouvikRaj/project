@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib.animation as animation
-from netCDF4 import Dataset, num2date
-import pandas as pd
+from netCDF4 import Dataset
 
 data = Dataset(r'C:\Users\shouv\Downloads\project\ta_Amon_reanalysis_JRA-55_195801-201912.2D.cg.nc')
 lat = data.variables['lat'][:]
@@ -10,43 +8,36 @@ pres = data.variables['plev'][:]
 time = data.variables['time'][:]
 ta = data.variables['ta'][:]
 
-time_units = data.variables['time'].units
-time_calendar = data.variables['time'].calendar
-dates = num2date(time[:], units=time_units, calendar=time_calendar)
 
-x, y = np.meshgrid(lat, np.log10(pres)) 
+# Calculate the mean temperature across all time steps
+mean_temp = np.mean(ta, axis=0)
+x, y = np.meshgrid(lat, np.log10(pres))
 
-# Adjust figure size and add padding
-fig, ax = plt.subplots(figsize=(12, 9))
-plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9)
+fig, ax = plt.subplots(figsize=(12, 12))
 
-data_to_plot = np.flipud(np.squeeze(ta[0,:,:]))
-cax = ax.imshow(data_to_plot, extent=[x.min(), x.max(), y.min(), y.max()],
-                aspect='auto', cmap='jet', origin='upper',
-                interpolation='bilinear')
-cbar = fig.colorbar(cax, ax=ax, location='right', label='Temperature')
+# Create proper coordinate arrays for pcolormesh
+# We need to specify the cell edges rather than centers for pcolormes
 
-def update(frame):
-    data_to_plot = np.flipud(np.squeeze(ta[frame,:,:]))
-    cax.set_data(data_to_plot)
-    ax.set_title(f"Temperature for {dates[frame].strftime('%Y-%m-%d')}")
-    return cax, ax.title
+# Use pcolormesh with vertex coordinates
+im = ax.pcolormesh(x, y, np.flipud(mean_temp), 
+                   cmap='coolwarm',
+                   shading='gouraud')  # Using cell vertices for gouraud shading
+
+# Add contour lines with correct orientation
+contour_levels = np.linspace(np.min(mean_temp), np.max(mean_temp), 24)
+cs = ax.contour(x, y, np.flipud(mean_temp), levels=contour_levels, 
+                colors='black', alpha=0.5, linewidths=0.5)
+ax.clabel(cs, inline=True, fontsize=8, fmt='%1.0f')
+
+# Add colorbar
+cbar = fig.colorbar(im, ax=ax, location='right', label='Temperature (K)')
 
 
-ani = animation.FuncAnimation(fig, update, frames=len(time), interval=50, blit=False)
+# Customize axes
+ax.set_xticks([-90, -60, -30, 0, 30, 60, 90])
+ax.set_xticklabels(['90°S', '60°S', '30°S', '0°', '30°N', '60°N', '90°N'])
+ax.set_xlabel("Latitude (°N/°S)")
+ax.set_ylabel("Pressure (Log₁₀Pa)")
+ax.set_title("Average Temperature Distribution (1958-01-16 to 2019-03-16)")
 
-# Move tight_layout() after all plot elements are added
-plt.title("Temperature (K)")
-plt.xlabel("Latitude (°N)")
-plt.ylabel("Pressure (hPa)")
-plt.tight_layout()
-
-# Save with higher resolution and bitrate
-ani.save('temperature_animation_logarithmic_faster.mp4', 
-         writer='ffmpeg',
-         #dpi=100,  # Reduced DPI for reasonable file size
-         #fps=10
-         )
 plt.show()
-
-print(data.variables['ta'])
