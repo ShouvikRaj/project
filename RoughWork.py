@@ -1,39 +1,44 @@
-import xarray as xr
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
+import numpy as np
 import matplotlib.animation as animation
+from netCDF4 import Dataset
 
-# Load the dataset
-netcdf_file1 = 'ta_Amon_reanalysis_JRA-55_195801-201912.2D.cg.nc'
-xrds1 = xr.open_dataset(netcdf_file1)
 
-# Extract the temperature variable
-ta = xrds1['ta']  # Shape: (time, plev, lat)
-times = xrds1['time'].values  # Extract time coordinates
+data = Dataset(r'C:\Users\shouv\Downloads\project\ta_Amon_reanalysis_JRA-55_195801-201912.2D.cg.nc')
+lat = data.variables['lat'][:]
+pres = data.variables['plev'][:]
+time = data.variables['time'][:]
+ta = data.variables['ta'][:]
 
-# Select a pressure level (Modify as needed)
-plev_index = 0  # Use the first pressure level, adjust as necessary
-ta_selected = ta.isel(plev=plev_index)  # Shape: (time, lat)
+x, y = np.meshgrid(lat, np.log10(pres)) 
+"""
+data_to_plot = np.flipud(np.squeeze(ta[0,:,:]))
 
-# Set up the figure
-fig, ax = plt.subplots(figsize=(8, 6))
-cbar = None  # Placeholder for colorbar
+plt.imshow(data_to_plot, extent=[x.min(), x.max(), y.min(), y.max()],
+            aspect='auto', cmap='rainbow', origin='upper')
 
-# Create the initial frame
-im = ax.imshow(ta_selected.isel(time=0), cmap='coolwarm', aspect='auto')
+cbar = plt.colorbar(location= 'right', label = 'Temperature')
+ """
 
-# Add colorbar
-cbar = fig.colorbar(im, ax=ax)
+fig, ax = plt.subplots()
+cax = ax.imshow(np.flipud(np.squeeze(ta[:,:,:])),
+                 extent=[x.min(), x.max(), y.min(),
+                          y.max()], aspect='auto', 
+                          cmap='rainbow', origin='upper')
+cbar = fig.colorbar(cax, ax=ax, location='right', label='Temperature')
 
 def update(frame):
-    global im
-    im.set_array(ta_selected.isel(time=frame).values)  # Update image data
-    ax.set_title(f"Temperature at {str(times[frame])}")
+    data_to_plot = np.flipud(np.squeeze(ta[frame,:,:]))
+    cax.set_data(data_to_plot)
+    ax.set_title(f"Average temp - Time step {frame}")
+    return cax,
 
-# Create animation
-ani = animation.FuncAnimation(fig, update, frames=len(times), interval=200)
-
-# Save as GIF or MP4 (optional)
-# ani.save('temperature_animation.gif', writer='pillow', fps=5)
-
+ani = animation.FuncAnimation(fig, update, 
+                              frames=len(time), blit=True)
+ani.save('temperature_animation.mp4', writer='ffmpeg')
+plt.title("Average temp")
+plt.xlabel("Latitude (degrees N)")
+plt.ylabel("Pressure (hPa)")
 plt.show()
+
+#print(data.variables['ta'])
