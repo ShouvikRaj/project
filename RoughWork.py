@@ -6,7 +6,7 @@ data = Dataset(r'C:\Users\shouv\Downloads\project\ta_Amon_reanalysis_JRA-55_1958
 lat = data.variables['lat'][:]
 pres = data.variables['plev'][:]
 time = data.variables['time'][:]
-#ta = data.variables['ta'][:]
+ta = data.variables['ta'][:]
 
 
 
