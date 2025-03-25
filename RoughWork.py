@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 
 data = Dataset(r'C:\Users\shouv\Downloads\project\ta_Amon_reanalysis_JRA-55_195801-201912.2D.cg.nc')
 lat = data.variables['lat'][:]
-pres = data.variables['plev'][:]
+pres = data.variables['plev'][:22]
 time = data.variables['time'][:]
 ta = data.variables['ta'][:, :22, :]
 
@@ -38,11 +38,11 @@ ax.set_xticks([-90, -60, -30, 0, 30, 60, 90])
 ax.set_xticklabels(['90°S', '60°S', '30°S', '0°', '30°N', '60°N', '90°N'], fontsize=7)
 ax.set_xlabel("Latitude (°S/°N)", fontsize=10)
 ax.set_ylabel("Pressure (hPa)", fontsize=10)
-ax.set_title("Average Temperature Distribution Complete (January 1958 to December 2019)", fontsize=14)
+ax.set_title("Average Temperature Distribution (January 1958 to December 2019)", fontsize=14)
 
 # Flip y-axis with log values
 ax.set_ylim(np.log10(pres.max()), np.log10(pres.min()))
 
 # Save the plot as a high-quality PNG image
-plt.savefig('temperature_distribution_complete.png', dpi=300, bbox_inches='tight')
+plt.savefig('temperature_distribution.png', dpi=300, bbox_inches='tight')
 plt.show()
