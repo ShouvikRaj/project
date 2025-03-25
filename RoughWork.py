@@ -37,7 +37,7 @@ ax.set_yticklabels([f'{round(p, 1)}' for p in np.log10(pres)], fontsize=7)
 ax.set_xticks([-90, -60, -30, 0, 30, 60, 90])
 ax.set_xticklabels(['90°S', '60°S', '30°S', '0°', '30°N', '60°N', '90°N'], fontsize=7)
 ax.set_xlabel("Latitude (°S/°N)", fontsize=10)
-ax.set_ylabel("Pressure (hPa)", fontsize=10)
+ax.set_ylabel("Pressure (log₁₀Pa)", fontsize=10)
 ax.set_title("Average Temperature Distribution (January 1958 to December 2019)", fontsize=14)
 
 # Flip y-axis with log values
