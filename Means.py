@@ -94,3 +94,7 @@ def WindMean():
     # Save with high resolution
     plt.savefig('Wind_speed_distribution.png', dpi=300, bbox_inches='tight')
     plt.show()
+
+TempMean()
+WindMean() 
+
